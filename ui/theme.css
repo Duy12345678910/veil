@@ -1,0 +1,32 @@
+/* Veil themes. Every UI surface uses these variables. */
+:root, [data-theme="claude-dark"] {
+  --bg: #1b1816; --bar: #2a2522; --tab: #231f1c; --tab-hover: #2e2926; --text: #f4efe7; --muted: #a99f94;
+  --accent: #d97757; --accent-2: #e9a184; --accent-text: #1b1816; --field: #161311; --border: #3b3430;
+  --popup: #2a2522; --hover: rgba(255,255,255,.07); --danger: #e5676b; --ok: #6cc18a; --shadow: rgba(0,0,0,.45);
+  --page: #1f1c1a; --card: #2a2522;
+}
+[data-theme="claude-light"] {
+  --bg: #e8e2d6; --bar: #faf8f3; --tab: #ddd6c8; --tab-hover: #e4ddd0; --text: #201c19; --muted: #6e665c;
+  --accent: #c2603b; --accent-2: #d97757; --accent-text: #ffffff; --field: #ffffff; --border: #d6cebf;
+  --popup: #ffffff; --hover: rgba(0,0,0,.06); --danger: #c93d42; --ok: #2f8f55; --shadow: rgba(60,40,20,.18);
+  --page: #f4f1ea; --card: #ffffff;
+}
+[data-theme="ember"] {
+  --bg: #24110b; --bar: #3a1b11; --tab: #2d150d; --tab-hover: #3a1d13; --text: #ffeee4; --muted: #c99d88;
+  --accent: #ff8a5c; --accent-2: #ffb08f; --accent-text: #24110b; --field: #1a0c07; --border: #5a2d1e;
+  --popup: #3a1b11; --hover: rgba(255,200,170,.08); --danger: #ff7a7a; --ok: #7fd49a; --shadow: rgba(0,0,0,.5);
+  --page: #2a140c; --card: #3a1b11;
+}
+[data-theme="midnight"] {
+  --bg: #10121c; --bar: #1b1f2e; --tab: #151826; --tab-hover: #1f2335; --text: #e9ebf5; --muted: #9298b3;
+  --accent: #d97757; --accent-2: #e9a184; --accent-text: #10121c; --field: #0c0e16; --border: #2c3148;
+  --popup: #1b1f2e; --hover: rgba(255,255,255,.06); --danger: #ef6b73; --ok: #6cc18a; --shadow: rgba(0,0,0,.5);
+  --page: #131623; --card: #1b1f2e;
+}
+[data-private="1"] { --bg: #241a35; --tab: #2c2042; --tab-hover: #352750; --bar: #31254a; --popup: #31254a; --card: #31254a; --page: #20172f; --border: #4a3a6a; --accent: #b294f5; --accent-2: #cdb8ff; --accent-text: #1a1228; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: var(--bg); color: var(--text); font: 13px "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif; }
+button { font: inherit; color: inherit; cursor: default; }
+svg.i { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 5px; border: 2px solid transparent; background-clip: padding-box; }

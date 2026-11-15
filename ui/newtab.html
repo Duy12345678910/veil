@@ -1,0 +1,97 @@
+<!doctype html>
+<html data-theme="{{THEME}}" data-private="{{PRIVATE}}">
+<head>
+<meta charset="utf-8">
+<title>New Tab</title>
+<style>
+/*THEME*/
+html, body { min-height: 100%; background: var(--page); }
+body { display: flex; flex-direction: column; align-items: center; padding: 9vh 24px 40px;
+  background: radial-gradient(1200px 500px at 50% -10%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 70%), var(--page); }
+.logo svg { width: 96px; height: 96px; filter: drop-shadow(0 10px 24px color-mix(in srgb, var(--accent) 40%, transparent)); }
+h1 { margin-top: 18px; font: 600 34px/1.15 "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif; letter-spacing: -.5px; text-align: center; }
+h1 .by { color: var(--accent); }
+.tag { margin-top: 8px; color: var(--muted); font-size: 14px; text-align: center; }
+.private { display: none; max-width: 640px; margin-top: 18px; padding: 12px 16px; border-radius: 12px; background: var(--card); border: 1px solid var(--border); line-height: 1.5; }
+[data-private="1"] .private { display: flex; gap: 12px; align-items: flex-start; }
+.private svg.i { width: 26px; height: 26px; color: var(--accent); }
+form { display: flex; align-items: center; gap: 10px; width: min(640px, 100%); height: 52px; margin-top: 30px; padding: 0 8px 0 18px;
+  background: var(--card); border: 1.5px solid var(--border); border-radius: 26px; box-shadow: 0 6px 24px var(--shadow); }
+form:focus-within { border-color: var(--accent); }
+form svg.i { color: var(--muted); width: 18px; height: 18px; }
+#q { flex: 1; border: 0; outline: 0; background: none; color: var(--text); font: inherit; font-size: 16px; }
+#go { height: 38px; padding: 0 18px; border: 0; border-radius: 19px; background: var(--accent); color: var(--accent-text); font-weight: 650; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, 104px); justify-content: center; gap: 14px; width: min(760px, 100%); margin-top: 36px; }
+.tile { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 14px 6px 10px; border: 0; border-radius: 14px; background: none; }
+.tile:hover { background: var(--hover); }
+.tile .ic { width: 52px; height: 52px; border-radius: 14px; display: grid; place-items: center; color: #fff; font-size: 22px; font-weight: 700; box-shadow: 0 4px 12px var(--shadow); }
+.tile .nm { max-width: 92px; font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tile .rm { position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; display: none; place-items: center; border: 0; border-radius: 11px; background: var(--card); color: var(--muted); }
+.tile:hover .rm { display: grid; }
+.tile.add .ic { background: var(--card); color: var(--muted); border: 1.5px dashed var(--border); box-shadow: none; }
+#addform { display: none; gap: 8px; margin-top: 16px; }
+#addform.on { display: flex; }
+#addform input { height: 34px; padding: 0 10px; border: 1.5px solid var(--border); border-radius: 8px; background: var(--card); color: var(--text); font: inherit; outline: 0; }
+#addform button { height: 34px; padding: 0 14px; border: 0; border-radius: 8px; background: var(--accent); color: var(--accent-text); font-weight: 600; }
+.foot { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; margin-top: auto; padding-top: 40px; }
+.foot button { display: flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border: 0; border-radius: 16px; background: var(--card); color: var(--muted); }
+.foot button:hover { color: var(--text); }
+.pills { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; justify-content: center; }
+.pill { display: flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 14px; background: var(--card); color: var(--muted); font-size: 12px; }
+.pill svg.i { width: 14px; height: 14px; color: var(--ok); }
+</style>
+</head>
+<body>
+<div class="logo">{{LOGO}}</div>
+<h1>Veil <span class="by">By Claude</span>, Built in Rust.</h1>
+<div class="tag">A private, fast browser. Your browsing stays yours.</div>
+<div class="pills" id="pills"></div>
+<div class="private" id="priv"></div>
+<form id="f"><span id="si"></span><input id="q" autocomplete="off" spellcheck="false" placeholder="Search or enter address"><button id="go">Search</button></form>
+<div class="grid" id="grid"></div>
+<div id="addform"><input id="an" placeholder="Name"><input id="au" placeholder="Address (e.g. example.com)"><button id="ab">Add</button></div>
+<div class="foot" id="foot"></div>
+<script>
+/*ICONS*/
+const $ = (id) => document.getElementById(id);
+let shortcuts = [];
+$("si").innerHTML = icon("search");
+$("pills").innerHTML = [["Trackers blocked", "shield"], ["HTTPS-only", "lock"], ["No telemetry", "shield"], ["Passwords encrypted", "key"]]
+  .map(([t, i]) => `<span class="pill">${icon(i)}${t}</span>`).join("");
+$("priv").innerHTML = `${icon("mask")}<div><b>You're in a private window.</b><br><span style="color:var(--muted)">Veil won't remember history, cookies, site data or form entries from this window. They're wiped as soon as you close it.</span></div>`;
+$("f").onsubmit = (e) => { e.preventDefault(); if ($("q").value.trim()) send("navigate", { url: $("q").value }); };
+$("foot").innerHTML = [["history", "clock", "History"], ["bookmarks", "book", "Bookmarks"], ["passwords", "key", "Passwords"], ["settings", "gear", "Settings"], ["help", "help", "Shortcuts"]]
+  .map(([a, i, t]) => `<button data-a="${a}">${icon(i)}${t}</button>`).join("");
+document.querySelectorAll(".foot button").forEach((b) => b.onclick = () => send("act", { action: b.dataset.a }));
+
+function render() {
+  const g = $("grid");
+  g.innerHTML = shortcuts.map((s, i) => {
+    const h = hostOf(s.url);
+    return `<button class="tile" data-i="${i}" title="${esc(s.url)}"><span class="ic" style="background:linear-gradient(135deg,hsl(${hue(h)} 55% 52%),hsl(${(hue(h) + 30) % 360} 50% 38%))">${esc((s.title || h)[0].toUpperCase())}</span>
+      <span class="nm">${esc(s.title || h)}</span><span class="rm" data-rm="${i}" title="Remove">${icon("close")}</span></button>`;
+  }).join("") + `<button class="tile add" id="add"><span class="ic">${icon("plus")}</span><span class="nm">Add shortcut</span></button>`;
+  g.querySelectorAll(".tile[data-i]").forEach((t) => t.onclick = (e) => {
+    const rm = e.target.closest("[data-rm]");
+    if (rm) { shortcuts.splice(+rm.dataset.rm, 1); send("set_shortcuts", { list: shortcuts }); return; }
+    send("navigate", { url: shortcuts[+t.dataset.i].url, new_tab: e.ctrlKey });
+  });
+  $("add").onclick = () => { $("addform").classList.toggle("on"); $("an").focus(); };
+}
+$("ab").onclick = () => {
+  const url = $("au").value.trim(); if (!url) return;
+  shortcuts.push({ title: $("an").value.trim() || hostOf(url.includes("://") ? url : "https://" + url), url: url.includes("://") ? url : "https://" + url });
+  $("an").value = $("au").value = ""; $("addform").classList.remove("on");
+  send("set_shortcuts", { list: shortcuts });
+};
+window.veil = {
+  recv(what, d) {
+    if (what !== "newtab") return;
+    shortcuts = d.shortcuts; render();
+    $("q").placeholder = `Search with ${d.search} or enter address`;
+  },
+};
+send("get", { what: "newtab" });
+</script>
+</body>
+</html>

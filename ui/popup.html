@@ -1,0 +1,142 @@
+<!doctype html>
+<html data-theme="{{THEME}}" data-private="{{PRIVATE}}">
+<head>
+<meta charset="utf-8">
+<style>
+/*THEME*/
+html, body { height: 100%; overflow: hidden; background: transparent; user-select: none; }
+#box { height: 100%; overflow-y: auto; overflow-x: hidden; background: var(--popup); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 10px 30px var(--shadow); }
+.mode-suggest #box { border-radius: 0 0 14px 14px; padding: 6px 0; }
+.mode-find #box { display: flex; align-items: center; gap: 6px; padding: 0 8px; }
+.item { display: flex; align-items: center; gap: 12px; width: 100%; height: 34px; padding: 0 14px; border: 0; background: none; text-align: left; border-radius: 0; }
+.item:hover, .item.sel { background: var(--hover); }
+.item .lbl { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.item .kbd { color: var(--muted); font-size: 12px; }
+.item svg.i { color: var(--muted); }
+.sep { height: 1px; margin: 5px 0; background: var(--border); }
+.menu { padding: 6px 0; }
+.head { display: flex; align-items: center; gap: 12px; margin: 4px 8px 6px; padding: 10px; border-radius: 10px; background: var(--hover); }
+.head:hover { background: var(--tab-hover); }
+.av { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 15px; flex: none; }
+.head b { display: block; font-size: 14px; } .head small { color: var(--muted); }
+.zoom { display: flex; align-items: center; height: 38px; padding: 0 10px 0 14px; gap: 6px; }
+.zoom .lbl { flex: 1; }
+.zb { min-width: 30px; height: 28px; padding: 0 6px; display: grid; place-items: center; border: 0; border-radius: 7px; background: var(--hover); }
+.zb:hover { background: var(--tab-hover); }
+.sg { height: 40px; }
+.sg .u { color: var(--accent-2); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 45%; }
+#find { flex: 1; height: 34px; padding: 0 12px; border: 1.5px solid var(--border); border-radius: 9px; background: var(--field); color: var(--text); font: inherit; outline: 0; }
+#find:focus { border-color: var(--accent); }
+.ib { width: 32px; height: 32px; display: grid; place-items: center; border: 0; border-radius: 8px; background: none; }
+.ib:hover { background: var(--hover); }
+.pad { padding: 14px; }
+h3 { font-size: 15px; margin-bottom: 12px; }
+label { display: block; color: var(--muted); font-size: 12px; margin: 8px 0 4px; }
+input.t { width: 100%; height: 32px; padding: 0 10px; border: 1.5px solid var(--border); border-radius: 8px; background: var(--field); color: var(--text); font: inherit; outline: 0; }
+input.t:focus { border-color: var(--accent); }
+.row { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+.b { height: 32px; padding: 0 16px; border: 0; border-radius: 8px; background: var(--hover); font-weight: 600; }
+.b.pri { background: var(--accent); color: var(--accent-text); }
+.muted { color: var(--muted); }
+</style>
+</head>
+<body>
+<div id="box"></div>
+<script>
+/*ICONS*/
+const box = document.getElementById("box");
+let mode = null, data = null;
+const act = (action) => send("act", { action });
+const M = [
+  ["new_tab", "tab", "New Tab", "Ctrl+T"], ["new_window", "window", "New Window", "Ctrl+N"],
+  ["new_private_window", "mask", "New Private Window", "Ctrl+Shift+P"], "-",
+  ["history", "clock", "History", "Ctrl+H"], ["bookmarks", "book", "Bookmarks", "Ctrl+Shift+O"],
+  ["downloads", "download", "Downloads", "Ctrl+J"], ["passwords", "key", "Passwords", ""],
+  ["extensions", "puzzle", "Extensions and Themes", "Ctrl+Shift+A"], "-",
+  ["print", "print", "Print…", "Ctrl+P"], ["save_page", "save", "Save Page As…", "Ctrl+S"],
+  ["find", "find", "Find in Page…", "Ctrl+F"], "ZOOM", "-",
+  ["settings", "gear", "Settings", ""], ["clear_data", "cookie", "Clear Browsing Data…", "Ctrl+Shift+Del"],
+  ["toggle_bookmarks_bar", "book", "BMBAR", "Ctrl+Shift+B"],
+  ["dev_tools", "code", "Developer Tools", "F12"], ["view_source", "code", "View Page Source", "Ctrl+U"],
+  ["help", "help", "Help and Shortcuts", ""], "-",
+  ["exit", "exit", "Exit", "Ctrl+Shift+Q"],
+];
+
+function menu(d) {
+  let h = `<div class="menu"><button class="item head" data-a="profiles"><span class="av" style="background:${d.private ? "#8a6ad6" : esc(d.profile.color)}">${esc(d.profile.name[0].toUpperCase())}</span>
+    <span class="lbl"><b>${esc(d.profile.name)}${d.private ? " · Private" : ""}</b><small>Manage profiles and users ›</small></span></button>`;
+  for (const m of M) {
+    if (m === "-") { h += '<div class="sep"></div>'; continue; }
+    if (m === "ZOOM") {
+      h += `<div class="zoom"><span class="lbl">Zoom</span><button class="zb" data-a="zoom_out">−</button>
+        <button class="zb" data-a="zoom_reset" id="zv">${Math.round(d.zoom * 100)}%</button><button class="zb" data-a="zoom_in">+</button>
+        <button class="zb" data-a="fullscreen" title="Full screen (F11)">${icon("full")}</button></div>`;
+      continue;
+    }
+    if (!d.web && ["print", "save_page", "find", "view_source"].includes(m[0])) continue;
+    const label = m[2] === "BMBAR" ? (d.bookmarksBar ? "Hide Bookmarks Bar" : "Show Bookmarks Bar") : m[2];
+    h += `<button class="item" data-a="${m[0]}">${icon(m[1])}<span class="lbl">${label}</span><span class="kbd">${m[3]}</span></button>`;
+  }
+  box.innerHTML = h + "</div>";
+  box.querySelectorAll("[data-a]").forEach((b) => b.onclick = () => act(b.dataset.a));
+}
+
+function suggest(d) {
+  box.innerHTML = d.items.map((s, i) => `<button class="item sg${i === d.index ? " sel" : ""}" data-i="${i}">
+    ${icon(s.kind === "search" ? "search" : s.kind === "bookmark" ? "star" : "clock")}
+    <span class="lbl">${esc(s.title || s.url)}</span>${s.kind === "search" ? "" : `<span class="u">${esc(s.url)}</span>`}</button>`).join("");
+  box.querySelectorAll(".sg").forEach((b) => {
+    b.onmousedown = (e) => e.preventDefault();
+    b.onclick = () => send("navigate", { url: d.items[+b.dataset.i].url });
+  });
+}
+
+function find() {
+  box.innerHTML = `<input id="find" placeholder="Find in page" spellcheck="false"><button class="ib" id="fp" title="Previous (Shift+F3)">${icon("up")}</button>
+    <button class="ib" id="fn" title="Next (F3)">${icon("down")}</button><button class="ib" id="fx" title="Close (Esc)">${icon("close")}</button>`;
+  const f = document.getElementById("find");
+  const go = (back) => f.value && send("find_text", { text: f.value, backwards: back });
+  f.oninput = () => go(false);
+  f.onkeydown = (e) => { if (e.key === "Enter") go(e.shiftKey); if (e.key === "Escape") send("find_close"); };
+  document.getElementById("fp").onclick = () => go(true);
+  document.getElementById("fn").onclick = () => go(false);
+  document.getElementById("fx").onclick = () => send("find_close");
+  window.veil.findStep = go;
+  setTimeout(() => f.focus(), 0);
+}
+
+function logins(list) {
+  box.innerHTML = `<div class="menu"><div class="item muted">Saved logins for this site</div>` + list.map((l) =>
+    `<button class="item" data-id="${l.id}">${icon("user")}<span class="lbl">${esc(l.username || "(no username)")}</span><span class="kbd">${esc(hostOf(l.origin))}</span></button>`).join("") +
+    `<div class="sep"></div><button class="item" data-a="passwords">${icon("key")}<span class="lbl">Manage passwords</span></button></div>`;
+  box.querySelectorAll("[data-id]").forEach((b) => b.onclick = () => send("fill_login", { id: +b.dataset.id }));
+  box.querySelector("[data-a]").onclick = () => act("passwords");
+}
+
+function bookmark(d) {
+  box.innerHTML = `<div class="pad"><h3>${icon("star")} Bookmark added</h3><label>Name</label><input class="t" id="bt" value="${esc(d.title)}">
+    <label>Address</label><input class="t" id="bu" value="${esc(d.url)}"><div class="row"><button class="b" id="rm">Remove</button><button class="b pri" id="ok">Done</button></div></div>`;
+  const save = () => send("edit_bookmark", { id: d.id, title: document.getElementById("bt").value, url: document.getElementById("bu").value });
+  document.getElementById("ok").onclick = () => { save(); send("popup_close", {}); };
+  document.getElementById("rm").onclick = () => send("delete_bookmark", { id: d.id });
+  document.getElementById("bt").onkeydown = (e) => { if (e.key === "Enter") { save(); send("popup_close", {}); } };
+  setTimeout(() => document.getElementById("bt").select(), 0);
+}
+
+window.veil = {
+  show(m, d) {
+    mode = m; data = d; document.body.className = "mode-" + m;
+    ({ menu, suggest, find, logins, bookmark })[m]?.(d);
+    if (m === "menu" || m === "logins" || m === "bookmark") {
+      requestAnimationFrame(() => send("popup_size", { h: box.firstElementChild.offsetHeight + 4 }));
+    }
+  },
+  hide() { mode = null; box.innerHTML = ""; },
+  zoom(z) { const v = document.getElementById("zv"); if (v) v.textContent = Math.round(z * 100) + "%"; },
+  findStep() {},
+};
+window.addEventListener("blur", () => { if (mode && mode !== "find" && mode !== "suggest") send("popup_close", { mode }); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && mode !== "find") send("popup_close", {}); });
+</script>
+</body>
+</html>

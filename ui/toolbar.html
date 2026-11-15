@@ -1,0 +1,181 @@
+<!doctype html>
+<html data-theme="{{THEME}}" data-private="{{PRIVATE}}">
+<head>
+<meta charset="utf-8">
+<style>
+/*THEME*/
+html, body { height: 100%; overflow: hidden; user-select: none; }
+#tabs { display: flex; align-items: flex-end; height: 38px; padding: 0 6px 0 8px; gap: 2px; background: var(--bg); }
+#badge { display: none; align-items: center; gap: 6px; height: 28px; margin: 0 6px 4px 0; padding: 0 10px; border-radius: 8px;
+  background: rgba(178,148,245,.18); color: var(--accent-2); font-weight: 600; white-space: nowrap; }
+[data-private="1"] #badge { display: flex; }
+.tab { position: relative; display: flex; align-items: center; gap: 8px; height: 32px; min-width: 48px; max-width: 230px; flex: 1 1 210px;
+  padding: 0 6px 0 12px; border-radius: 9px 9px 0 0; color: var(--muted); overflow: hidden; }
+.tab:hover { background: var(--tab-hover); }
+.tab.active { background: var(--bar); color: var(--text); }
+.tab.active::after { content: ""; position: absolute; left: 12px; right: 12px; top: 0; height: 2px; border-radius: 2px; background: var(--accent); }
+.tab .fav { width: 16px; height: 16px; flex: none; border-radius: 3px; }
+.tab .dot { width: 16px; height: 16px; flex: none; display: grid; place-items: center; color: var(--muted); }
+.tab .spin { width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: s .8s linear infinite; }
+@keyframes s { to { transform: rotate(360deg); } }
+.tab .title { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tab .x { width: 22px; height: 22px; display: grid; place-items: center; border: 0; border-radius: 6px; background: none; color: inherit; flex: none; }
+.tab .x:hover { background: var(--hover); }
+#newtab { width: 30px; height: 30px; margin: 0 0 2px 2px; display: grid; place-items: center; border: 0; border-radius: 8px; background: none; color: var(--muted); }
+#newtab:hover { background: var(--tab-hover); color: var(--text); }
+#nav { display: flex; align-items: center; gap: 4px; height: 46px; padding: 0 8px; background: var(--bar); }
+.btn { position: relative; width: 34px; height: 34px; display: grid; place-items: center; border: 0; border-radius: 9px; background: none; color: var(--text); flex: none; }
+.btn:hover { background: var(--hover); }
+.btn svg.i { width: 18px; height: 18px; }
+#addr { flex: 1; display: flex; align-items: center; gap: 6px; height: 36px; margin: 0 6px; padding: 0 6px 0 12px; min-width: 120px;
+  background: var(--field); border: 1.5px solid transparent; border-radius: 18px; }
+#addr:focus-within { border-color: var(--accent); }
+#lock { display: grid; place-items: center; color: var(--ok); }
+#lock.warn { color: #e8b25a; }
+#url { flex: 1; min-width: 0; border: 0; outline: 0; background: none; color: var(--text); font: inherit; font-size: 14px; user-select: text; }
+#url::placeholder { color: var(--muted); }
+.mini { width: 28px; height: 28px; display: grid; place-items: center; border: 0; border-radius: 14px; background: none; color: var(--muted); }
+.mini:hover { background: var(--hover); color: var(--text); }
+#star.on { color: var(--accent); } #star.on svg { fill: var(--accent); }
+#key { display: none; color: var(--accent); }
+#shield { display: flex; align-items: center; gap: 5px; height: 32px; padding: 0 10px; border: 0; border-radius: 9px; background: none; color: var(--ok); font-weight: 650; }
+#shield:hover { background: var(--hover); }
+.count { position: absolute; top: 3px; right: 3px; min-width: 15px; height: 15px; padding: 0 4px; border-radius: 8px; background: var(--accent); color: var(--accent-text); font-size: 10px; font-weight: 700; line-height: 15px; display: none; }
+#avatar { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 12px; }
+#bm { display: flex; align-items: center; gap: 2px; height: 30px; padding: 0 8px 2px; background: var(--bar); border-bottom: 1px solid var(--border); overflow: hidden; }
+#bm.hidden { display: none; }
+.chip { display: flex; align-items: center; gap: 6px; height: 24px; max-width: 180px; padding: 0 8px; border: 0; border-radius: 6px; background: none; color: var(--text); white-space: nowrap; overflow: hidden; }
+.chip:hover { background: var(--hover); }
+.chip span { overflow: hidden; text-overflow: ellipsis; }
+.chip .ltr { width: 14px; height: 14px; border-radius: 3px; font-size: 9px; font-weight: 700; display: grid; place-items: center; color: #fff; flex: none; }
+#bm .empty { color: var(--muted); padding: 0 6px; }
+#progress { position: absolute; left: 0; top: 82px; height: 2px; width: 0; background: var(--accent); opacity: 0; }
+#progress.on { opacity: 1; width: 75%; transition: width 5s cubic-bezier(.1,.7,.2,1); }
+</style>
+</head>
+<body>
+<div id="tabs"><div id="badge" title="Private window: nothing is saved">&nbsp;Private</div><button id="newtab" title="New tab (Ctrl+T)"></button></div>
+<div id="nav">
+  <button class="btn" id="back" title="Back (Alt+Left)"></button>
+  <button class="btn" id="fwd" title="Forward (Alt+Right)"></button>
+  <button class="btn" id="reload" title="Reload (F5)"></button>
+  <button class="btn" id="home" title="Home (Alt+Home)"></button>
+  <div id="addr">
+    <span id="lock"></span>
+    <input id="url" spellcheck="false" autocomplete="off" placeholder="Search or enter address">
+    <button class="mini" id="key" title="Fill saved login"></button>
+    <button class="mini" id="star" title="Bookmark this page (Ctrl+D)"></button>
+  </div>
+  <button id="shield" title="Trackers and ads blocked on this page"><span id="shieldIcon"></span><span id="blocked">0</span></button>
+  <button class="btn" id="dl" title="Downloads (Ctrl+J)"><span class="count" id="dlcount"></span></button>
+  <button class="btn" id="prof" title="Profiles"><span id="avatar"></span></button>
+  <button class="btn" id="menu" title="Open menu (Alt+F)"></button>
+</div>
+<div id="bm"></div>
+<div id="progress"></div>
+<script>
+/*ICONS*/
+const $ = (id) => document.getElementById(id);
+const url = $("url");
+let state = { tabs: [] }, sugg = [], sel = -1, typed = "";
+$("badge").insertAdjacentHTML("afterbegin", icon("mask"));
+$("newtab").innerHTML = icon("plus"); $("back").innerHTML = icon("back"); $("fwd").innerHTML = icon("fwd");
+$("reload").innerHTML = icon("reload"); $("home").innerHTML = icon("home"); $("menu").innerHTML = icon("menu");
+$("star").innerHTML = icon("star"); $("key").innerHTML = icon("key"); $("shieldIcon").innerHTML = icon("shield");
+$("dl").insertAdjacentHTML("afterbegin", icon("download"));
+const act = (action) => send("act", { action });
+$("newtab").onclick = () => act("new_tab");
+$("back").onclick = () => act("back"); $("fwd").onclick = () => act("forward");
+$("reload").onclick = () => act(state.loading ? "stop" : "reload");
+$("home").onclick = () => act("home");
+$("menu").onclick = () => send("popup", { mode: "menu" });
+$("star").onclick = () => act("bookmark_page");
+$("dl").onclick = () => act("downloads");
+$("prof").onclick = () => act("profiles");
+$("shield").onclick = () => act("settings");
+$("key").onclick = () => { const r = $("key").getBoundingClientRect(); send("popup", { mode: "logins", x: r.left, w: 320 }); };
+document.getElementById("tabs").addEventListener("dblclick", (e) => { if (e.target.id === "tabs") act("new_tab"); });
+
+function rowsForPopup() {
+  const r = $("addr").getBoundingClientRect();
+  send("suggest_show", { items: sugg, index: sel, x: r.left, w: r.width });
+}
+url.addEventListener("input", () => { typed = url.value; sel = -1; send("url_input", { text: url.value }); });
+url.addEventListener("keydown", (e) => {
+  if ((e.key === "ArrowDown" || e.key === "ArrowUp") && sugg.length) {
+    e.preventDefault();
+    sel = (sel + (e.key === "ArrowDown" ? 1 : -1) + sugg.length + 1) % (sugg.length + 1) - 1;
+    url.value = sel >= 0 && sugg[sel].kind !== "search" ? sugg[sel].url : typed;
+    rowsForPopup();
+  } else if (e.key === "Enter" && url.value.trim()) {
+    const pick = sel >= 0 ? sugg[sel] : null;
+    send("navigate", { url: pick && pick.kind !== "search" ? pick.url : url.value, new_tab: e.altKey });
+    sugg = []; sel = -1; rowsForPopup(); url.blur();
+  } else if (e.key === "Escape") {
+    url.value = state.url || ""; sugg = []; rowsForPopup(); url.blur();
+  }
+});
+url.addEventListener("focus", () => setTimeout(() => url.select(), 0));
+url.addEventListener("blur", () => setTimeout(() => send("popup_close", { mode: "suggest" }), 180));
+
+function letter(t, u) {
+  const h = hostOf(u); return `<span class="ltr" style="background:hsl(${hue(h)} 45% 45%)">${esc((t || h || "?")[0].toUpperCase())}</span>`;
+}
+
+window.veil = {
+  update(s) {
+    state = s;
+    const strip = $("tabs");
+    strip.querySelectorAll(".tab").forEach((t) => t.remove());
+    for (const t of s.tabs) {
+      const el = document.createElement("div");
+      el.className = "tab" + (t.active ? " active" : "");
+      el.title = t.title;
+      const lead = t.loading ? '<span class="dot"><span class="spin"></span></span>'
+        : t.favicon ? `<img class="fav" src="${esc(t.favicon)}" onerror="this.outerHTML='<span class=dot>${icon("globe").replace(/"/g, "&quot;")}</span>'">`
+        : `<span class="dot">${icon(t.internal ? "shield" : "globe")}</span>`;
+      el.innerHTML = `${lead}<span class="title">${esc(t.title || "New Tab")}</span><button class="x" title="Close tab (Ctrl+W)">${icon("close")}</button>`;
+      el.querySelector(".x").onclick = (e) => { e.stopPropagation(); send("close_tab", { id: t.id }); };
+      el.onmousedown = (e) => { if (e.button === 1) { e.preventDefault(); send("close_tab", { id: t.id }); } };
+      el.onclick = () => send("switch_tab", { id: t.id });
+      strip.insertBefore(el, $("newtab"));
+    }
+    if (document.activeElement !== url) url.value = s.url;
+    url.placeholder = `Search with ${s.search} or enter address`;
+    const secure = s.url.startsWith("https://") || !s.web;
+    $("lock").innerHTML = icon(s.web ? (secure ? "lock" : "warn") : "search");
+    $("lock").className = secure ? "" : "warn";
+    $("lock").title = s.web ? (secure ? "Connection is secure" : "Connection is not secure") : "";
+    $("star").className = "mini" + (s.bookmarked ? " on" : "");
+    $("star").style.display = s.web ? "grid" : "none";
+    $("key").style.display = s.logins ? "grid" : "none";
+    $("blocked").textContent = s.blocked;
+    $("reload").innerHTML = icon(s.loading ? "stop" : "reload");
+    $("progress").className = s.loading ? "on" : "";
+    $("dlcount").textContent = s.downloads; $("dlcount").style.display = s.downloads ? "block" : "none";
+    $("avatar").textContent = (s.profile.name || "?")[0].toUpperCase();
+    $("avatar").style.background = s.private ? "#8a6ad6" : s.profile.color;
+    $("prof").title = `Profile: ${s.profile.name}`;
+    const bm = $("bm");
+    bm.className = s.bookmarksBar ? "" : "hidden";
+    bm.innerHTML = s.bookmarks.length ? "" : '<span class="empty">Press Ctrl+D to bookmark a page. Bookmarks show up here.</span>';
+    for (const b of s.bookmarks) {
+      const c = document.createElement("button");
+      c.className = "chip"; c.title = `${b.title}\n${b.url}`;
+      c.innerHTML = `${letter(b.title, b.url)}<span>${esc(b.title || hostOf(b.url))}</span>`;
+      c.onclick = (e) => send("navigate", { url: b.url, new_tab: e.ctrlKey });
+      c.onauxclick = (e) => { if (e.button === 1) send("navigate", { url: b.url, new_tab: true }); };
+      bm.appendChild(c);
+    }
+  },
+  suggestions(items, engine) {
+    if (document.activeElement !== url || !url.value.trim()) { sugg = []; rowsForPopup(); return; }
+    sugg = [{ kind: "search", title: `Search ${engine} for “${url.value.trim()}”`, url: url.value.trim() }, ...items];
+    sel = -1; rowsForPopup();
+  },
+  focusUrl() { url.focus(); url.select(); },
+};
+send("ready");
+</script>
+</body>
+</html>
